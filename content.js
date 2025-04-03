@@ -9,57 +9,52 @@ const KEYWORDS = [
   "dezabonează-te",
   "oprește notificările",
 ];
+const DEBUG = true;
 
-// 🔍 Extract sender info from Gmail/Outlook UI
-function getSenderInfo() {
-  const senderEl = document.querySelector("[email], [data-hovercard-id]");
-  if (senderEl) {
-    return (
-      senderEl.getAttribute("email") ||
-      senderEl.getAttribute("data-hovercard-id")
-    );
-  }
-
-  const fallbackEl =
-    document.querySelector("span[email]") ||
-    document.querySelector("span[role='link']");
-  return fallbackEl?.textContent?.trim() || "Unknown sender";
+function debounce(func, delay) {
+  let timeoutId;
+  return function (...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
+  };
 }
 
-// 🕒 Wait until sender and unsubscribe links are available before scanning
-function waitForSenderAndScan(retries = 10) {
-  const sender = getSenderInfo();
-  const hasSender = sender && sender !== "Unknown sender";
+// 🚀 Initialize when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", setupMutationObserver);
+} else {
+  setupMutationObserver();
+}
 
-  const anchors = Array.from(document.querySelectorAll("a"));
-  const hasUnsubLink = anchors.some((a) => {
-    const text = a.textContent?.toLowerCase() ?? "";
-    const href = a.href?.toLowerCase() ?? "";
-    return KEYWORDS.some(
-      (keyword) => text.includes(keyword) || href.includes(keyword)
-    );
-  });
+// 👀 Watch for DOM changes (Gmail/Outlook SPA)
+function setupMutationObserver() {
+  try {
+    const debouncedScan = debounce(() => {
+      if (DEBUG)
+        console.log("[Unsubscribe Helper] DOM changed — waiting to scan...");
+      scanForUnsubscribeLinks();
+    }, 500); // wait 500ms after last change
 
-  console.log(
-    `[Unsubscribe Helper] Scan attempt — sender: ${sender}, hasSender: ${hasSender}, hasUnsubLink: ${hasUnsubLink}`
-  );
+    const observer = new MutationObserver(debouncedScan);
 
-  if (hasSender && hasUnsubLink) {
-    console.log(
-      "[Unsubscribe Helper] ✅ Found sender + unsubscribe link. Scanning..."
-    );
-    scanForUnsubscribeLinks(sender);
-  } else if (retries > 0) {
-    setTimeout(() => waitForSenderAndScan(retries - 1), 300);
-  } else {
-    console.warn(
-      "[Unsubscribe Helper] ❌ Could not find valid sender or links."
-    );
+    // Start with the most general target: document.body
+    let targetNode = document.body;
+
+    observer.observe(targetNode, {
+      childList: true,
+      subtree: true,
+    });
+
+    // Initial scan after short delay
+    setTimeout(scanForUnsubscribeLinks, 2000); // Increased delay
+  } catch (err) {
+    if (DEBUG)
+      console.warn("[Unsubscribe Helper] MutationObserver setup failed:", err);
   }
 }
 
 // 🔎 Scan for unsubscribe links and merge into storage
-function scanForUnsubscribeLinks(sender) {
+function scanForUnsubscribeLinks() {
   try {
     const foundLinks = [];
     const anchors = document.querySelectorAll("a");
@@ -70,11 +65,18 @@ function scanForUnsubscribeLinks(sender) {
 
       for (const keyword of KEYWORDS) {
         if (text.includes(keyword) || href.includes(keyword)) {
-          if (!foundLinks.find((link) => link.sender === sender)) {
+          const alreadyInFound = foundLinks.some(
+            (link) => link.href === a.href
+          );
+          if (!alreadyInFound) {
+            let context = extractFooterContext(a); // Try footer first
+            if (!context) {
+              context = extractDomain(href); // Fallback to domain
+            }
             foundLinks.push({
               text: a.textContent.trim(),
               href: a.href,
-              sender,
+              context: context, // Store the context
             });
             a.style.border = "2px solid red"; // Optional: visual indicator
           }
@@ -90,8 +92,7 @@ function scanForUnsubscribeLinks(sender) {
 
       foundLinks.forEach((newLink) => {
         const alreadyExists = existingLinks.some(
-          (existing) =>
-            existing.href === newLink.href && existing.sender === newLink.sender
+          (existing) => existing.href === newLink.href
         );
         if (!alreadyExists) {
           mergedLinks.push(newLink);
@@ -99,43 +100,80 @@ function scanForUnsubscribeLinks(sender) {
       });
 
       chrome.storage.local.set({ unsubscribeLinks: mergedLinks }, () => {
-        console.log(
-          "[Unsubscribe Helper] Stored",
-          mergedLinks.length,
-          "unsubscribe link(s)."
-        );
+        const count = mergedLinks.length.toString();
+
+        // ✅ Set badge text and color
+        chrome.runtime.sendMessage({
+          type: "updateBadge",
+          count: mergedLinks.length,
+        });
+        if (DEBUG)
+          console.log(
+            "[Unsubscribe Helper] Stored",
+            count,
+            "unsubscribe link(s). Badge updated."
+          );
       });
     });
   } catch (err) {
-    if (err?.message === "Extension context invalidated.") {
-      return;
-    }
-    console.warn("[Unsubscribe Helper] scanForUnsubscribeLinks() failed:", err);
+    if (err?.message === "Extension context invalidated.") return;
+    if (DEBUG)
+      console.warn(
+        "[Unsubscribe Helper] scanForUnsubscribeLinks() failed:",
+        err
+      );
   }
 }
 
-// 👀 Watch for DOM changes (Gmail/Outlook SPA)
-function setupMutationObserver() {
+// 🌐 Extract the domain from a URL
+function extractDomain(url) {
   try {
-    const observer = new MutationObserver(() => {
-      console.log("[Unsubscribe Helper] DOM changed — waiting to scan...");
-      waitForSenderAndScan(); // wait for valid DOM state
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-
-    setTimeout(waitForSenderAndScan, 1000); // first scan after delay
-  } catch (err) {
-    console.warn("[Unsubscribe Helper] MutationObserver setup failed:", err);
+    const urlObj = new URL(url);
+    let domain = urlObj.hostname.replace(/^www\./, ""); // Remove "www."
+    if (domain.length > 50) {
+      domain = domain.substring(0, 50) + "...";
+    }
+    return domain;
+  } catch (e) {
+    return "Unknown";
   }
 }
 
-// 🚀 Initialize when DOM is ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", setupMutationObserver);
-} else {
-  setupMutationObserver();
+// 🦶 Extract context from the email footer
+function extractFooterContext(anchor) {
+  // Try to find the footer
+  let currentElement = anchor;
+  for (let i = 0; i < 5; i++) {
+    if (currentElement.parentElement) {
+      currentElement = currentElement.parentElement;
+    } else {
+      break;
+    }
+  }
+
+  const footer = currentElement;
+
+  if (!footer) return null;
+
+  // Look for common patterns in the footer
+  const patterns = [
+    /©\s*(.+?)\s+\d{4}/i, // Copyright notice (e.g., © Company Name 2023)
+    /All rights reserved by\s*(.+)/i, // All rights reserved (e.g., All rights reserved by Company Name)
+    /from\s*(.+)/i, // from (e.g., from Company Name)
+    /sent by\s*(.+)/i, // sent by (e.g., sent by Company Name)
+    /powered by\s*(.+)/i, // powered by (e.g., powered by Company Name)
+  ];
+
+  for (const pattern of patterns) {
+    const match = pattern.exec(footer.textContent);
+    if (match && match[1]) {
+      let context = match[1].trim(); // Return the captured group
+      if (context.length > 50) {
+        context = context.substring(0, 50) + "...";
+      }
+      return context;
+    }
+  }
+
+  return null; // No context found
 }

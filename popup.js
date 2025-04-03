@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("links");
   const clearBtn = document.getElementById("clearBtn");
 
+  // 🔁 Render the list of unsubscribe links
   function renderLinks() {
     chrome.storage.local.get("unsubscribeLinks", (data) => {
       const links = data.unsubscribeLinks || [];
@@ -13,56 +14,66 @@ document.addEventListener("DOMContentLoaded", () => {
 
       container.innerHTML = "";
 
-      links.forEach(({ text, href, sender }) => {
+      links.forEach(({ href, context }) => {
         const div = document.createElement("div");
         div.className = "link";
 
-        const displayText = text?.trim() || href;
-
-        const linkText = document.createElement("span");
-        linkText.textContent = `${displayText} ${sender ? `(${sender})` : ""}`;
+        const contextText = document.createElement("span");
+        contextText.textContent = `(${context})`;
+        contextText.style.color = "gray";
 
         const button = document.createElement("button");
-        button.textContent = "Unsub";
+        button.textContent = "Unsub \uD83D\uDEAB";
 
         button.addEventListener("click", () => {
-          // Open the unsubscribe link
+          // ✅ Open the unsubscribe link
           window.open(href, "_blank");
 
-          // Fade out animation
+          // ✅ Animate fade out
           div.classList.add("fade-out");
 
-          // After animation, remove from storage
-          setTimeout(() => {
-            chrome.storage.local.get("unsubscribeLinks", (data) => {
-              const allLinks = data.unsubscribeLinks || [];
+          // ✅ Remove the entry immediately
+          chrome.storage.local.get("unsubscribeLinks", (data) => {
+            const currentLinks = data.unsubscribeLinks || [];
 
-              const updatedLinks = allLinks.filter(
-                (link) => !(link.sender === sender)
-              );
+            // Remove the clicked link using href match
+            const updatedLinks = currentLinks.filter(
+              (link) => link.href !== href
+            );
 
-              chrome.storage.local.set(
-                { unsubscribeLinks: updatedLinks },
-                () => {
-                  renderLinks(); // Re-render UI
-                }
-              );
+            chrome.storage.local.set({ unsubscribeLinks: updatedLinks }, () => {
+              // 🔄 Update the badge count
+              chrome.runtime.sendMessage({
+                type: "updateBadge",
+                count: updatedLinks.length,
+              });
+
+              // 🔁 Refresh the UI
+              // renderLinks(); // Removed this line
+              div.remove(); // Remove the div directly
             });
-          }, 300); // match CSS fade
+          });
         });
 
-        div.appendChild(linkText);
+        div.appendChild(contextText);
         div.appendChild(button);
         container.appendChild(div);
       });
     });
   }
 
+  // 🧹 Clear all links + reset badge
   clearBtn.addEventListener("click", () => {
     chrome.storage.local.set({ unsubscribeLinks: [] }, () => {
+      chrome.runtime.sendMessage({
+        type: "updateBadge",
+        count: 0,
+      });
+
       container.textContent = "Unsubscribe list cleared.";
     });
   });
 
+  // 🚀 Initial render
   renderLinks();
 });

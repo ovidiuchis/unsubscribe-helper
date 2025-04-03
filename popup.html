@@ -1,72 +1,87 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Unsubscribe</title>
+    <title>Unsubscribe Helper</title>
     <style>
       body {
-        font-family: "Segoe UI", sans-serif;
-        padding: 16px;
-        width: 320px;
-        background: #f9f9f9;
-        color: #333;
+        width: 300px;
+        font-family: "Segoe UI", "Helvetica Neue", sans-serif; /* Modern font stack */
+        font-size: 14px;
+        color: #333; /* Dark gray text */
+        background-color: #f8f8f8; /* Light gray background */
+        padding: 10px;
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #222; /* Darker heading */
+      }
+
+      #links {
+        margin-bottom: 10px;
       }
 
       .link {
-        background: #fff;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-        padding: 12px;
-        margin-bottom: 12px;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        transition: all 0.3s ease;
+        justify-content: space-between;
+        padding: 8px 10px;
+        border-radius: 4px; /* Rounded corners */
+        background-color: #fff; /* White link background */
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        transition: all 0.2s ease-in-out; /* Smooth transitions */
+        margin-bottom: 5px;
       }
 
-      .link.fade-out {
-        opacity: 0;
-        height: 0;
-        margin-bottom: 0;
-        padding: 0;
-        overflow: hidden;
+      .link:hover {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* Slightly larger shadow on hover */
+        transform: translateY(-1px); /* Slight lift on hover */
       }
 
       .link span {
-        flex: 1;
-        font-size: 14px;
-        margin-right: 8px;
-        line-height: 1.4;
+        color: #666; /* Gray context text */
+        font-size: 12px;
       }
 
       button {
-        background-color: #007bff;
-        border: none;
+        background-color: #dc3545; /* Red button */
         color: white;
-        padding: 6px 10px;
-        border-radius: 4px;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px; /* Rounded corners */
         cursor: pointer;
-        font-size: 13px;
+        font-size: 12px;
+        transition: background-color 0.2s ease-in-out; /* Smooth transition */
       }
 
       button:hover {
-        background-color: #0056b3;
+        background-color: #c82333; /* Darker red on hover */
       }
 
       #clearBtn {
         margin-top: 10px;
         width: 100%;
-        background-color: #dc3545;
+        background-color: #6c757d; /* Gray clear button */
       }
 
       #clearBtn:hover {
-        background-color: #a72b37;
+        background-color: #5a6268; /* Darker gray on hover */
+      }
+
+      .fade-out {
+        opacity: 0;
+        transform: translateX(10px); /* Slide out to the right */
+        transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
       }
     </style>
   </head>
   <body>
-    <h2>Unsubscribe Links</h2>
-    <div id="links">Loading...</div>
+    <h1>Unsubscribe Helper</h1>
+    <div id="links"></div>
     <button id="clearBtn">Clear All</button>
-    <script type="module" src="popup.js"></script>
+    <script src="popup.js"></script>
   </body>
 </html>
