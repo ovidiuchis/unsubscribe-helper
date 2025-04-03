@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Unsubscribe</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        padding: 16px;
+        width: 320px;
+        background: #f9f9f9;
+        color: #333;
+      }
+
+      .link {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        padding: 12px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+      }
+
+      .link.fade-out {
+        opacity: 0;
+        height: 0;
+        margin-bottom: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .link span {
+        flex: 1;
+        font-size: 14px;
+        margin-right: 8px;
+        line-height: 1.4;
+      }
+
+      button {
+        background-color: #007bff;
+        border: none;
+        color: white;
+        padding: 6px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      #clearBtn {
+        margin-top: 10px;
+        width: 100%;
+        background-color: #dc3545;
+      }
+
+      #clearBtn:hover {
+        background-color: #a72b37;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Unsubscribe Links</h2>
+    <div id="links">Loading...</div>
+    <button id="clearBtn">Clear All</button>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

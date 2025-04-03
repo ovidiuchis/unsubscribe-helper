@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Unsubscribe Helper",
+  "version": "1.1",
+  "description": "Helps you unsubscribe from newsletters in Gmail and Outlook.",
+  "permissions": ["storage", "activeTab", "scripting"],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon.png",
+      "32": "icons/icon.png"
+    }
+  },
+  "host_permissions": [
+    "https://mail.google.com/*",
+    "https://outlook.live.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*", "https://outlook.live.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
