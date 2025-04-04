@@ -84,10 +84,5 @@ The extension scans your email inbox pages for unsubscribe keywords and links:
 
 ---
 
-## 📃 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
----
 
 Enjoy a cleaner inbox! 📬✨
