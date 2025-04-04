@@ -1,6 +1,7 @@
 # Unsubscribe Helper Chrome Extension
 
-A simple, effective Chrome extension designed to help you effortlessly unsubscribe from unwanted email newsletters directly within Gmail and Outlook.
+A simple, effective Chrome extension designed to help you effortlessly unsubscribe from unwanted email newsletters directly within Gmail and Outlook.  
+
 
 ---
 
@@ -27,14 +28,14 @@ A simple, effective Chrome extension designed to help you effortlessly unsubscri
 
 ## 📸 Screenshots
 
-The extension
-![screenshot](assets/ss1.png)
+The extension pinned to Chrome  
+![screenshot](assets/ss1.png)  
 
-The extension in action (counter and unsub action available)
-![screenshot](assets/ss2.png)
+The extension in action (counter and unsub action available)  
+![screenshot](assets/ss2.png)  
 
-Highlighting of the detected unsubscribe links
-![screenshot](assets/ss3.png)
+Highlighting of the detected unsubscribe links in the email text  
+![screenshot](assets/ss3.png)  
 
 ---
 
